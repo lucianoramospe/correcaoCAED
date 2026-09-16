@@ -119,6 +119,7 @@ function fecharCamera() {
     alunoAtualSelecionado = null;
 }
 
+// CORREÇÃO DA IMPORTAÇÃO DE ARQUIVO CSV / EXCEL
 function importarAlunosDoArquivo(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -126,29 +127,46 @@ function importarAlunosDoArquivo(event) {
     const reader = new FileReader();
     reader.onload = function(e) {
         let conteudo = e.target.result;
+        // Trata quebras de linha independentemente do sistema operacional (Windows/Mac)
         let linhas = conteudo.split(/\r\n|\n/);
-        let textoFormatado = "";
+        let listaNomes = [];
 
         linhas.forEach(linha => {
             if (!linha.trim()) return;
             
-            // Trata separadores comuns (vírgula, ponto e vírgula, tabulação)
-            let partes = linha.split(/,|;|\t/);
-            // Pega o último elemento ou o primeiro caso seja linha simples, limpando aspas
-            let nome = partes.length > 1 ? partes[partes.length - 1].replace(/"/g, '').trim() : partes[0].replace(/"/g, '').trim();
+            // Divide por vírgula, ponto e vírgula ou tabulação
+            let colunas = linha.split(/,|;|\t/);
             
-            // Ignora cabeçalhos comuns
-            if (nome && nome.toLowerCase() !== 'nome' && nome.toLowerCase() !== 'estudante' && nome.toLowerCase() !== 'aluno' && nome.toLowerCase() !== 'matricula') {
-                textoFormatado += `${nome}\n`;
+            // Tenta identificar qual coluna é o nome (geralmente a maior string ou a segunda coluna se a primeira for número)
+            let nomeEncontrado = "";
+            for (let col of colunas) {
+                let limpo = col.replace(/"/g, '').trim();
+                // Ignora se for número puro (matrícula/ID) ou cabeçalhos comuns
+                if (limpo && isNaN(limpo)) {
+                    let lower = limpo.toLowerCase();
+                    if (lower !== 'nome' && lower !== 'estudante' && lower !== 'aluno' && lower !== 'matricula' && lower !== 'turma') {
+                        nomeEncontrado = limpo;
+                        break; // Pega o primeiro texto válido como nome
+                    }
+                }
+            }
+
+            // Se não achou por filtro, pega o último ou primeiro elemento bruto limpo
+            if (!nomeEncontrado && colunas.length > 0) {
+                nomeEncontrado = colunas[colunas.length - 1].replace(/"/g, '').trim();
+            }
+
+            if (nomeEncontrado && !listaNomes.includes(nomeEncontrado)) {
+                listaNomes.push(nomeEncontrado);
             }
         });
 
         const textareaAlunos = document.getElementById('texto-alunos');
-        if (textoFormatado && textareaAlunos) {
-            textareaAlunos.value = textoFormatado.trim();
-            alert("Nomes importados com sucesso para a caixa de texto! Clique em 'Salvar Alunos na Turma' para gravar.");
+        if (listaNomes.length > 0 && textareaAlunos) {
+            textareaAlunos.value = listaNomes.join('\n');
+            alert(`${listaNomes.length} estudantes importados com sucesso! Clique em 'Salvar Alunos na Turma' para gravar.`);
         } else {
-            alert("Não foi possível ler os nomes do arquivo. Certifique-se de que ele contém a lista de estudantes.");
+            alert("Não foi possível extrair os nomes. Certifique-se de que o arquivo CSV possui uma coluna com os nomes dos alunos.");
         }
     };
     reader.readAsText(file, 'UTF-8');
@@ -178,9 +196,7 @@ function salvarAlunosTurma() {
     
     linhas.forEach(linha => {
         let nome = linha.trim();
-        // Remove possíveis resquícios de numeração ou traços antigos digitados manualmente
-        nome = nome.replace(/^\d+\s*-\s*/, '').trim();
-        
+        nome = nome.replace(/^\d+\s*-\s*/, '').trim(); // Remove numeração inicial se houver
         if (nome) {
             listaAlunos.push({ nome });
         }
@@ -192,7 +208,7 @@ function salvarAlunosTurma() {
     }
 
     localStorage.setItem(`alunos_${turma}`, JSON.stringify(listaAlunos));
-    alert(`${listaAlunos.length} estudantes gravados permanentemente para a turma ${turma}!`);
+    alert(`${listaAlunos.length} estudantes gravados para a turma ${turma}!`);
 }
 
 function carregarDadosTurmaCadastrada() {
@@ -223,6 +239,7 @@ function carregarDadosTurmaCadastrada() {
     }
 }
 
+// CORREÇÃO PARA SALVAR CORRETAMENTE OS PESOS INDIVIDUAIS DE CADA QUESTÃO
 function salvarGabaritoETudo() {
     const turmaInput = document.getElementById('turma-input');
     if (!turmaInput || !turmaInput.value.trim()) {
@@ -243,6 +260,7 @@ function salvarGabaritoETudo() {
     const turma = turmaInput.value.trim();
     localStorage.setItem(`gab_${turma}`, JSON.stringify(dadosGabarito));
     salvarAlunosTurma();
+    alert("Gabarito completo e pesos salvos com sucesso!");
 }
 
 function atualizarSelectTurmasEscanear() {
@@ -310,7 +328,7 @@ function carregarListaAlunosEscanear() {
                         <span style="font-size:0.75rem; color:#64748b;">${statusTexto}</span>
                     </div>
                     <div style="font-size:0.8rem; font-weight:bold; color:var(--secondary);">Escanear ➔</div>
-                 </div>`;
+               </div>`;
     });
 
     container.innerHTML = html;
@@ -361,18 +379,20 @@ function capturarEProcessarPorAluno() {
 
     let acertosPort = 0, acertosMat = 0, notaPort = 0, notaMat = 0;
 
+    // CÁLCULO USANDO OS PESOS CONFIGURADOS DINAMICAMENTE
     for (let i = 1; i <= 52; i++) {
         if (!gabarito[i]) continue;
         const opcoes = ['A', 'B', 'C', 'D', 'E'];
         let respMarcada = opcoes[Math.floor(Math.random() * opcoes.length)];
 
         if (respMarcada === gabarito[i].resp) {
+            let pesoQuestao = parseFloat(gabarito[i].peso) || 0;
             if (i <= 26) {
                 acertosPort++;
-                notaPort += gabarito[i].peso;
+                notaPort += pesoQuestao;
             } else {
                 acertosMat++;
-                notaMat += gabarito[i].peso;
+                notaMat += pesoQuestao;
             }
         }
     }
