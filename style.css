@@ -1,386 +1,195 @@
-<<<<<<< HEAD
+/* Estilos Gerais */
 :root {
-    --primary: #1e3a8a;
-    --secondary: #3b82f6;
-    --bg: #f8fafc;
-    --text: #1e293b;
+    --primary: #1e293b;
+    --secondary: #0284c7;
+    --bg-color: #f1f5f9;
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--bg);
-    color: var(--text);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
     margin: 0;
     padding: 0;
-}
-
-header {
-    background-color: var(--primary);
-    color: white;
-    padding: 1rem;
-    text-align: center;
+    color: #334155;
 }
 
 .container {
-    max-width: 600px;
+    max-width: 800px;
     margin: 0 auto;
-    padding: 1rem;
+    padding: 15px;
 }
 
+/* Abas */
 .tabs {
     display: flex;
     background: #e2e8f0;
     border-radius: 8px;
-    padding: 4px;
-    margin-bottom: 1rem;
+    overflow: hidden;
+    margin-bottom: 20px;
 }
 
 .tab {
     flex: 1;
     text-align: center;
-    padding: 10px;
-    cursor: pointer;
+    padding: 12px;
     font-weight: bold;
-    border-radius: 6px;
-    transition: all 0.3s;
-    font-size: 0.75rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #475569;
+    transition: 0.2s;
 }
 
 .tab.active {
-    background: white;
-    color: var(--primary);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    background: var(--primary);
+    color: white;
 }
 
+/* Paineis */
 .panel {
     display: none;
     background: white;
-    padding: 1.5rem;
+    padding: 20px;
     border-radius: 12px;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
 }
 
 .panel.active {
     display: block;
 }
 
-button {
-    background-color: var(--secondary);
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-    width: 100%;
-    margin-top: 15px;
-}
-
-button:hover {
-    opacity: 0.9;
-}
-
-.btn-excel {
-    background-color: #16a34a;
-    margin-top: 10px;
-}
-
-.btn-import-csv {
-    background-color: #0d9488;
-    margin-top: 8px;
-}
-
-input, select, textarea {
-    width: 100%;
-    padding: 10px;
-    margin: 8px 0 16px 0;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    box-sizing: border-box;
-}
-
-.lote-box, .aluno-cad-box {
-    background: #f1f5f9;
-    padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    border: 1px solid #cbd5e1;
-}
-
-.gabarito-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
-    gap: 10px;
-    max-height: 220px;
-    overflow-y: auto;
-    border: 1px solid #e2e8f0;
-    padding: 10px;
-    border-radius: 6px;
-}
-
-.questao-item {
-    text-align: center;
-    font-size: 0.85rem;
-    background: #f8fafc;
-    padding: 6px;
-    border-radius: 6px;
-    border: 1px solid #e2e8f0;
-}
-
-.questao-item select, .questao-item input {
-    margin: 2px 0 0 0;
-    padding: 4px;
-    font-size: 0.8rem;
-}
-
-video, canvas {
-    width: 100%;
-    max-height: 250px;
-    border-radius: 8px;
-    background: #000;
-}
-
-.resultado-box {
-    background: #f1f5f9;
-    padding: 15px;
-    border-radius: 8px;
-    margin-top: 15px;
-}
-
-.badge {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    font-weight: bold;
-    color: white;
-}
-
-.badge-port { background-color: #2563eb; }
-.badge-mat { background-color: #16a34a; }
-
-.bloco-disciplina {
-    margin-bottom: 15px;
-}
-
-.lista-alunos-container {
-    max-height: 200px;
-    overflow-y: auto;
-    border: 1px solid #cbd5e1;
-    background: white;
-    border-radius: 6px;
-    margin-top: 10px;
-}
-
-.aluno-card-item {
-    padding: 10px;
-    border-bottom: 1px solid #e2e8f0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.aluno-card-item:hover {
-    background: #eff6ff;
-}
-
-.aluno-card-item.avaliado {
-    background: #f0fdf4;
-    color: #166534;
-=======
-:root {
-    --primary: #1e3a8a;
-    --secondary: #3b82f6;
-    --bg: #f8fafc;
-    --text: #1e293b;
-}
-
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--bg);
-    color: var(--text);
-    margin: 0;
-    padding: 0;
-}
-
-header {
-    background-color: var(--primary);
-    color: white;
-    padding: 1rem;
-    text-align: center;
-}
-
-.container {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 1rem;
-}
-
-.tabs {
-    display: flex;
-    background: #e2e8f0;
-    border-radius: 8px;
-    padding: 4px;
-    margin-bottom: 1rem;
-}
-
-.tab {
-    flex: 1;
-    text-align: center;
-    padding: 10px;
-    cursor: pointer;
-    font-weight: bold;
-    border-radius: 6px;
-    transition: all 0.3s;
-    font-size: 0.75rem;
-}
-
-.tab.active {
-    background: white;
-    color: var(--primary);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.panel {
-    display: none;
-    background: white;
-    padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-}
-
-.panel.active {
+/* Inputs e Blocos */
+label {
     display: block;
+    margin-top: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+input[type="text"], input[type="number"], select, textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 0.95rem;
 }
 
 button {
     background-color: var(--secondary);
     color: white;
     border: none;
-    padding: 12px 20px;
-    border-radius: 8px;
-    font-size: 1rem;
+    padding: 12px;
+    width: 100%;
+    border-radius: 6px;
     font-weight: bold;
     cursor: pointer;
-    width: 100%;
     margin-top: 15px;
+    font-size: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 button:hover {
     opacity: 0.9;
 }
 
-.btn-excel {
-    background-color: #16a34a;
-    margin-top: 10px;
-}
-
-.btn-import-csv {
-    background-color: #0d9488;
-    margin-top: 8px;
-}
-
-input, select, textarea {
-    width: 100%;
-    padding: 10px;
-    margin: 8px 0 16px 0;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    box-sizing: border-box;
-}
-
-.lote-box, .aluno-cad-box {
-    background: #f1f5f9;
-    padding: 12px;
+/* Grade de Gabarito (Sem travar a altura) */
+.bloco-disciplina {
+    margin-top: 20px;
+    background: #f8fafc;
+    padding: 15px;
     border-radius: 8px;
-    margin-bottom: 15px;
-    border: 1px solid #cbd5e1;
+    border: 1px solid #e2e8f0;
 }
 
 .gabarito-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
     gap: 10px;
-    max-height: 220px;
-    overflow-y: auto;
-    border: 1px solid #e2e8f0;
-    padding: 10px;
-    border-radius: 6px;
-}
-
-.questao-item {
-    text-align: center;
-    font-size: 0.85rem;
-    background: #f8fafc;
-    padding: 6px;
-    border-radius: 6px;
-    border: 1px solid #e2e8f0;
-}
-
-.questao-item select, .questao-item input {
-    margin: 2px 0 0 0;
-    padding: 4px;
-    font-size: 0.8rem;
-}
-
-video, canvas {
-    width: 100%;
-    max-height: 250px;
-    border-radius: 8px;
-    background: #000;
-}
-
-.resultado-box {
-    background: #f1f5f9;
-    padding: 15px;
-    border-radius: 8px;
-    margin-top: 15px;
-}
-
-.badge {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    font-weight: bold;
-    color: white;
-}
-
-.badge-port { background-color: #2563eb; }
-.badge-mat { background-color: #16a34a; }
-
-.bloco-disciplina {
-    margin-bottom: 15px;
-}
-
-.lista-alunos-container {
-    max-height: 200px;
-    overflow-y: auto;
-    border: 1px solid #cbd5e1;
-    background: white;
-    border-radius: 6px;
     margin-top: 10px;
 }
 
+.questao-item {
+    background: white;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    text-align: center;
+    font-size: 0.85rem;
+}
+
+.questao-item select, .questao-item input {
+    padding: 4px;
+    font-size: 0.8rem;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+/* Outros componentes */
+.lote-box, .aluno-cad-box {
+    background: #f1f5f9;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 15px;
+    border: 1px solid #cbd5e1;
+}
+
+.btn-import-csv {
+    background-color: #0d9488;
+    margin-top: 5px;
+}
+
+.lista-alunos-container {
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    margin-top: 10px;
+    background: #f8fafc;
+}
+
 .aluno-card-item {
-    padding: 10px;
+    padding: 10px 15px;
     border-bottom: 1px solid #e2e8f0;
     display: flex;
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
-    transition: background 0.2s;
+    background: white;
 }
 
 .aluno-card-item:hover {
-    background: #eff6ff;
+    background: #f1f5f9;
 }
 
 .aluno-card-item.avaliado {
     background: #f0fdf4;
-    color: #166534;
->>>>>>> b8630c643dc26b5506b477046115494ed80173cf
+    border-left: 4px solid #16a34a;
 }
+
+video {
+    width: 100%;
+    max-height: 250px;
+    background: black;
+    border-radius: 6px;
+    object-fit: cover;
+}
+
+.resultado-box {
+    margin-top: 15px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.badge {
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: white;
+}
+.badge-port { background: #0284c7; }
+.badge-mat { background: #0d9488; }
+.btn-excel { background-color: #16a34a; margin-top: 15px; }
