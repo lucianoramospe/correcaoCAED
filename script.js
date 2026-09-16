@@ -1,6 +1,6 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -68,8 +68,8 @@ function aplicarValorLote() {
     const inputPort = document.getElementById('lote-port');
     const inputMat = document.getElementById('lote-mat');
     
-    const valorPort = inputPort ? parseFloat(inputPort.value) || 0 : 0;
-    const valorMat = inputMat ? parseFloat(inputMat.value) || 0 : 0;
+    const valorPort = inputPort ? parseFloat(inputPort.value.replace(',', '.')) || 0 : 0;
+    const valorMat = inputMat ? parseFloat(inputMat.value.replace(',', '.')) || 0 : 0;
 
     for (let i = 1; i <= 26; i++) {
         const campo = document.getElementById(`peso_${i}`);
@@ -102,7 +102,7 @@ function iniciarCamera() {
             })
             .catch(err => {
                 console.error(err);
-                alert("Erro ao acessar a câmera. Verifique as permissões do navegador ou se há outro aplicativo utilizando-a.");
+                alert("Erro ao acessar a câmera. Verifique as permissões do navegador.");
             });
     } else {
         alert("Seu navegador não suporta acesso à câmera.");
@@ -119,7 +119,6 @@ function fecharCamera() {
     alunoAtualSelecionado = null;
 }
 
-// CORREÇÃO DA IMPORTAÇÃO DE ARQUIVO CSV / EXCEL
 function importarAlunosDoArquivo(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -127,31 +126,25 @@ function importarAlunosDoArquivo(event) {
     const reader = new FileReader();
     reader.onload = function(e) {
         let conteudo = e.target.result;
-        // Trata quebras de linha independentemente do sistema operacional (Windows/Mac)
         let linhas = conteudo.split(/\r\n|\n/);
         let listaNomes = [];
 
         linhas.forEach(linha => {
             if (!linha.trim()) return;
-            
-            // Divide por vírgula, ponto e vírgula ou tabulação
             let colunas = linha.split(/,|;|\t/);
-            
-            // Tenta identificar qual coluna é o nome (geralmente a maior string ou a segunda coluna se a primeira for número)
             let nomeEncontrado = "";
+            
             for (let col of colunas) {
                 let limpo = col.replace(/"/g, '').trim();
-                // Ignora se for número puro (matrícula/ID) ou cabeçalhos comuns
                 if (limpo && isNaN(limpo)) {
                     let lower = limpo.toLowerCase();
-                    if (lower !== 'nome' && lower !== 'estudante' && lower !== 'aluno' && lower !== 'matricula' && lower !== 'turma') {
+                    if (!['nome', 'estudante', 'aluno', 'matricula', 'turma', 'id'].includes(lower)) {
                         nomeEncontrado = limpo;
-                        break; // Pega o primeiro texto válido como nome
+                        break;
                     }
                 }
             }
 
-            // Se não achou por filtro, pega o último ou primeiro elemento bruto limpo
             if (!nomeEncontrado && colunas.length > 0) {
                 nomeEncontrado = colunas[colunas.length - 1].replace(/"/g, '').trim();
             }
@@ -164,9 +157,9 @@ function importarAlunosDoArquivo(event) {
         const textareaAlunos = document.getElementById('texto-alunos');
         if (listaNomes.length > 0 && textareaAlunos) {
             textareaAlunos.value = listaNomes.join('\n');
-            alert(`${listaNomes.length} estudantes importados com sucesso! Clique em 'Salvar Alunos na Turma' para gravar.`);
+            alert(`${listaNomes.length} estudantes importados com sucesso! Clique em 'Salvar Alunos na Turma'.`);
         } else {
-            alert("Não foi possível extrair os nomes. Certifique-se de que o arquivo CSV possui uma coluna com os nomes dos alunos.");
+            alert("Não foi possível extrair os nomes do arquivo.");
         }
     };
     reader.readAsText(file, 'UTF-8');
@@ -196,16 +189,13 @@ function salvarAlunosTurma() {
     
     linhas.forEach(linha => {
         let nome = linha.trim();
-        nome = nome.replace(/^\d+\s*-\s*/, '').trim(); // Remove numeração inicial se houver
+        nome = nome.replace(/^\d+\s*-\s*/, '').trim();
         if (nome) {
             listaAlunos.push({ nome });
         }
     });
 
-    if (listaAlunos.length === 0) {
-        alert("Nenhum aluno válido encontrado.");
-        return;
-    }
+    if (listaAlunos.length === 0) return;
 
     localStorage.setItem(`alunos_${turma}`, JSON.stringify(listaAlunos));
     alert(`${listaAlunos.length} estudantes gravados para a turma ${turma}!`);
@@ -239,7 +229,6 @@ function carregarDadosTurmaCadastrada() {
     }
 }
 
-// CORREÇÃO PARA SALVAR CORRETAMENTE OS PESOS INDIVIDUAIS DE CADA QUESTÃO
 function salvarGabaritoETudo() {
     const turmaInput = document.getElementById('turma-input');
     if (!turmaInput || !turmaInput.value.trim()) {
@@ -253,7 +242,7 @@ function salvarGabaritoETudo() {
         const pesoEl = document.getElementById(`peso_${i}`);
         dadosGabarito[i] = {
             resp: gabEl ? gabEl.value : 'A',
-            peso: pesoEl ? parseFloat(pesoEl.value) || 0 : 0
+            peso: pesoEl ? parseFloat(pesoEl.value.replace(',', '.')) || 0 : 0
         };
     }
     
@@ -312,7 +301,7 @@ function carregarListaAlunosEscanear() {
     let nomesAvaliados = historico.map(h => h.nome);
 
     if (alunos.length === 0) {
-        container.innerHTML = `<div style="padding: 15px; text-align: center; color: #dc2626; font-size: 0.85rem;">Nenhum aluno cadastrado para esta turma. Cadastre na Aba 1.</div>`;
+        container.innerHTML = `<div style="padding: 15px; text-align: center; color: #dc2626; font-size: 0.85rem;">Nenhum aluno cadastrado para esta turma.</div>`;
         return;
     }
 
@@ -322,7 +311,7 @@ function carregarListaAlunosEscanear() {
         let classeCss = jaAvaliado ? 'aluno-card-item avaliado' : 'aluno-card-item';
         let statusTexto = jaAvaliado ? ' ✔ (Corrigido)' : '';
 
-        html += `<div class="${classeCss}" onclick='selecionarAlunoParaEscanear(${JSON.stringify(aluno.nome)})'>
+        html += `<div class="${classeCss}" onclick='window.selecionarAlunoParaEscanear(${JSON.stringify(aluno.nome)})'>
                     <div>
                         <strong>${aluno.nome}</strong><br>
                         <span style="font-size:0.75rem; color:#64748b;">${statusTexto}</span>
@@ -346,11 +335,6 @@ function selecionarAlunoParaEscanear(nome) {
     if (resultadoParcial) resultadoParcial.style.display = 'none';
     
     iniciarCamera();
-    
-    const areaCameraEl = document.getElementById('area-camera');
-    if (areaCameraEl) {
-        window.scrollTo({ top: areaCameraEl.offsetTop, behavior: 'smooth' });
-    }
 }
 
 function capturarEProcessarPorAluno() {
@@ -360,7 +344,6 @@ function capturarEProcessarPorAluno() {
     if (!selectTurma) return;
     
     const turma = selectTurma.value;
-    
     let gabaritoStr = localStorage.getItem(`gab_${turma}`);
     if (!gabaritoStr) {
         alert("Gabarito não encontrado!");
@@ -368,18 +351,8 @@ function capturarEProcessarPorAluno() {
     }
     let gabarito = JSON.parse(gabaritoStr);
 
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    if (video && canvas) {
-        canvas.width = video.videoWidth || 640;
-        canvas.height = video.videoHeight || 480;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    }
-
     let acertosPort = 0, acertosMat = 0, notaPort = 0, notaMat = 0;
 
-    // CÁLCULO USANDO OS PESOS CONFIGURADOS DINAMICAMENTE
     for (let i = 1; i <= 52; i++) {
         if (!gabarito[i]) continue;
         const opcoes = ['A', 'B', 'C', 'D', 'E'];
@@ -437,7 +410,6 @@ function carregarRelatorio() {
     if (!selectTurma || !container) return;
 
     const turma = selectTurma.value;
-
     if (!turma) {
         container.innerHTML = '<p>Selecione uma turma.</p>';
         if (btnExcel) btnExcel.style.display = 'none';
@@ -504,3 +476,17 @@ function exportarExcel() {
     a.click();
     document.body.removeChild(a);
 }
+
+// EXPÕE AS FUNÇÕES PARA O ESCOPO GLOBAL (window) PARA FUNCIONAR COM O HTML TYPE="MODULE"
+window.switchTab = switchTab;
+window.aplicarValorLote = aplicarValorLote;
+window.importarAlunosDoArquivo = importarAlunosDoArquivo;
+window.salvarAlunosTurma = salvarAlunosTurma;
+window.carregarDadosTurmaCadastrada = carregarDadosTurmaCadastrada;
+window.salvarGabaritoETudo = salvarGabaritoETudo;
+window.carregarListaAlunosEscanear = carregarListaAlunosEscanear;
+window.selecionarAlunoParaEscanear = selecionarAlunoParaEscanear;
+window.capturarEProcessarPorAluno = capturarEProcessarPorAluno;
+window.fecharCamera = fecharCamera;
+window.carregarRelatorio = carregarRelatorio;
+window.exportarExcel = exportarExcel;
