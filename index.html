@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Corretor CAED - Mobile</title>
+    <!-- OpenCV.js para processamento de imagem -->
+    <script async src="https://docs.opencv.org/4.8.0/opencv.js"></script>
+    <!-- Link para o arquivo de Estilos CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h2>Corretor CAED - Mobile</h2>
+        <p style="margin:0; font-size: 0.85rem;">Importação de Alunos & Correção Rápida</p>
+    </header>
+
+    <div class="container">
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab(0)">1. Gabarito & Alunos</div>
+            <div class="tab" onclick="switchTab(1)">2. Escanear por Aluno</div>
+            <div class="tab" onclick="switchTab(2)">3. Relatórios & Excel</div>
+        </div>
+
+        <!-- ABA 1: GABARITO, PESOS E CADASTRO DE ALUNOS -->
+        <div class="panel active" id="panel-0">
+            <h3>Configuração da Turma</h3>
+            <label>Nome da Turma:</label>
+            <input type="text" id="turma-input" placeholder="Ex: 9º Ano A" onchange="carregarDadosTurmaCadastrada()">
+            
+            <!-- OPÇÃO DE VALOR EM LOTE -->
+            <div class="lote-box">
+                <strong>Atribuir Valor em Lote (Questões):</strong>
+                <div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;">
+                    <div style="flex: 1;">
+                        <label style="font-size: 0.75rem; margin:0;">Português (1-26):</label>
+                        <input type="number" id="lote-port" value="0.38" step="0.01" min="0">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-size: 0.75rem; margin:0;">Matemática (27-52):</label>
+                        <input type="number" id="lote-mat" value="0.38" step="0.01" min="0">
+                    </div>
+                </div>
+                <button type="button" onclick="aplicarValorLote()" style="margin-top: 0; background: #475569; padding: 6px; font-size: 0.85rem;">Aplicar a Todas</button>
+            </div>
+
+            <!-- CADASTRO / IMPORTAÇÃO DE ESTUDANTES -->
+            <div class="aluno-cad-box">
+                <strong>Estudantes da Turma:</strong>
+                <p style="font-size: 0.75rem; color: #64748b; margin: 4px 0 8px 0;">Digite manualmente (um por linha: <em>Matrícula - Nome</em>) ou importe um arquivo do Excel (.csv):</p>
+                
+                <input type="file" id="input-arquivo-alunos" accept=".csv, .txt" style="display:none;" onchange="importarAlunosDoArquivo(event)">
+                <button type="button" onclick="document.getElementById('input-arquivo-alunos').click()" class="btn-import-csv">📂 Importar Alunos de Arquivo Excel/CSV</button>
+
+                <textarea id="texto-alunos" rows="4" placeholder="Ex:&#10;202601 - Ana Souza&#10;202602 - Bruno Lima" style="margin-top: 10px;"></textarea>
+                <button type="button" onclick="salvarAlunosTurma()" style="margin-top: 0; background: #0284c7; padding: 6px; font-size: 0.85rem;">Salvar Alunos na Turma</button>
+            </div>
+
+            <div class="bloco-disciplina">
+                <h4 style="margin: 5px 0;">Língua Portuguesa (1 a 26)</h4>
+                <div class="gabarito-grid" id="grid-port"></div>
+            </div>
+
+            <div class="bloco-disciplina">
+                <h4 style="margin: 5px 0;">Matemática (27 a 52)</h4>
+                <div class="gabarito-grid" id="grid-mat"></div>
+            </div>
+
+            <button onclick="salvarGabaritoETudo()">Salvar Gabarito Completo e Alunos</button>
+        </div>
+
+        <!-- ABA 2: ESCANEAR POR CLIQUE NO ALUNO -->
+        <div class="panel" id="panel-1">
+            <h3>Seleção do Estudante</h3>
+            
+            <label>Selecione a Turma:</label>
+            <select id="select-turma-escanear" onchange="carregarListaAlunosEscanear()"></select>
+
+            <p style="font-size: 0.85rem; margin-bottom: 5px;">Clique no estudante para abrir a câmera e escanear:</p>
+            <div id="lista-alunos-escolha" class="lista-alunos-container">
+                <div style="padding: 15px; text-align: center; color: #64748b; font-size: 0.85rem;">Selecione uma turma acima.</div>
+            </div>
+
+            <!-- CAIXA DE CÂMERA -->
+            <div id="area-camera" style="display:none; margin-top: 15px; background: #f8fafc; padding: 10px; border-radius: 8px; border: 2px dashed var(--secondary);">
+                <h4 id="aluno-selecionado-titulo" style="margin: 0 0 10px 0; color: var(--primary);"></h4>
+                <div style="position: relative;">
+                    <video id="video" autoplay playsinline></video>
+                    <canvas id="canvas" style="display:none;"></canvas>
+                </div>
+                <button onclick="capturarEProcessarPorAluno()" style="background-color: #16a34a;">Capturar Cartão Deste Aluno</button>
+                <button onclick="fecharCamera()" style="background-color: #64748b; margin-top: 5px;">Cancelar / Escolher Outro</button>
+            </div>
+            
+            <div id="resultado-parcial" class="resultado-box" style="display:none;">
+                <h4>Resultado Registrado!</h4>
+                <p id="res-estudante"></p>
+                <p><span class="badge badge-port">Português:</span> <span id="res-port-acertos"></span> acertos | <strong>Nota: <span id="res-port-nota"></span></strong></p>
+                <p><span class="badge badge-mat">Matemática:</span> <span id="res-mat-acertos"></span> acertos | <strong>Nota: <span id="res-mat-nota"></span></strong></p>
+                <p><strong>Nota Final Combinada:</strong> <span id="res-total"></span></p>
+            </div>
+        </div>
+
+        <!-- ABA 3: RELATÓRIOS E EXCEL -->
+        <div class="panel" id="panel-2">
+            <h3>Relatórios da Turma</h3>
+            <label>Selecione a Turma:</label>
+            <select id="select-turma-rel" onchange="carregarRelatorio()"></select>
+            
+            <div id="relatorio-conteudo" class="resultado-box">
+                <p>Selecione uma turma para visualizar as notas e estatísticas.</p>
+            </div>
+
+            <button class="btn-excel" id="btn-exportar" onclick="exportarExcel()" style="display:none;">Baixar Relatório Completo em Excel (.csv)</button>
+        </div>
+    </div>
+
+    <!-- Link para o arquivo de Lógica JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>
