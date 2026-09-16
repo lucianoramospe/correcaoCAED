@@ -1,3 +1,21 @@
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyCh57LB-HZ063qr7IdltXYNr9J2hBCY7b4",
+  authDomain: "corretorcaed-ete-vitoria.firebaseapp.com",
+  projectId: "corretorcaed-ete-vitoria",
+  storageBucket: "corretorcaed-ete-vitoria.firebasestorage.app",
+  messagingSenderId: "444999523654",
+  appId: "1:444999523654:web:dbff48d99c5958322e5947"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 // Variável de controle global
 let alunoAtualSelecionado = null;
 let videoStream = null;
