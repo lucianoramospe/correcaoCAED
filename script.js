@@ -1,11 +1,23 @@
+// Variável de controle global
 let alunoAtualSelecionado = null;
+let videoStream = null;
+
+// Inicializa os campos de gabarito ao carregar a página
+document.addEventListener("DOMContentLoaded", () => {
+    criarCamposGabarito();
+});
 
 function criarCamposGabarito() {
     const gridPort = document.getElementById('grid-port');
     const gridMat = document.getElementById('grid-mat');
 
+    if (!gridPort || !gridMat) return;
+
+    let htmlPort = '';
+    let htmlMat = '';
+
     for (let i = 1; i <= 26; i++) {
-        gridPort.innerHTML += `
+        htmlPort += `
             <div class="questao-item">
                 <strong>Q${i}</strong><br>
                 Resp: 
@@ -18,7 +30,7 @@ function criarCamposGabarito() {
     }
 
     for (let i = 27; i <= 52; i++) {
-        gridMat.innerHTML += `
+        htmlMat += `
             <div class="questao-item">
                 <strong>Q${i}</strong><br>
                 Resp: 
@@ -29,18 +41,25 @@ function criarCamposGabarito() {
                 <input type="number" id="peso_${i}" value="0.38" step="0.01" min="0">
             </div>`;
     }
+
+    gridPort.innerHTML = htmlPort;
+    gridMat.innerHTML = htmlMat;
 }
-criarCamposGabarito();
 
 function aplicarValorLote() {
-    const valorPort = parseFloat(document.getElementById('lote-port').value) || 0;
-    const valorMat = parseFloat(document.getElementById('lote-mat').value) || 0;
+    const inputPort = document.getElementById('lote-port');
+    const inputMat = document.getElementById('lote-mat');
+    
+    const valorPort = inputPort ? parseFloat(inputPort.value) || 0 : 0;
+    const valorMat = inputMat ? parseFloat(inputMat.value) || 0 : 0;
 
     for (let i = 1; i <= 26; i++) {
-        document.getElementById(`peso_${i}`).value = valorPort;
+        const campo = document.getElementById(`peso_${i}`);
+        if (campo) campo.value = valorPort;
     }
     for (let i = 27; i <= 52; i++) {
-        document.getElementById(`peso_${i}`).value = valorMat;
+        const campo = document.getElementById(`peso_${i}`);
+        if (campo) campo.value = valorMat;
     }
     alert("Valores aplicados com sucesso!");
 }
@@ -48,28 +67,37 @@ function aplicarValorLote() {
 function switchTab(index) {
     document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
     document.querySelectorAll('.panel').forEach((p, i) => p.classList.toggle('active', i === index));
+    
     if (index === 1) atualizarSelectTurmasEscanear();
     if (index === 2) atualizarSelectTurmasRelatorio();
 }
 
-let videoStream = null;
 function iniciarCamera() {
     const video = document.getElementById('video');
+    if (!video) return;
+
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
             .then(stream => {
                 videoStream = stream;
                 video.srcObject = stream;
             })
-            .catch(err => alert("Erro ao acessar a câmera. Verifique as permissões do navegador."));
+            .catch(err => {
+                console.error(err);
+                alert("Erro ao acessar a câmera. Verifique as permissões do navegador ou se há outro aplicativo utilizando-a.");
+            });
+    } else {
+        alert("Seu navegador não suporta acesso à câmera.");
     }
 }
 
 function fecharCamera() {
     if (videoStream) {
         videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
     }
-    document.getElementById('area-camera').style.display = 'none';
+    const areaCamera = document.getElementById('area-camera');
+    if (areaCamera) areaCamera.style.display = 'none';
     alunoAtualSelecionado = null;
 }
 
@@ -85,6 +113,7 @@ function importarAlunosDoArquivo(event) {
 
         linhas.forEach(linha => {
             if (!linha.trim()) return;
+            // Trata separadores comuns (vírgula, ponto e vírgula, tabulação)
             let partes = linha.split(/,|;|\t/);
             if (partes.length >= 2) {
                 let matricula = partes[0].replace(/"/g, '').trim();
@@ -95,23 +124,32 @@ function importarAlunosDoArquivo(event) {
             }
         });
 
-        if (textoFormatado) {
-            document.getElementById('texto-alunos').value = textoFormatado.trim();
+        const textareaAlunos = document.getElementById('texto-alunos');
+        if (textoFormatado && textareaAlunos) {
+            textareaAlunos.value = textoFormatado.trim();
             alert("Alunos importados com sucesso para a caixa de texto! Clique em 'Salvar Alunos na Turma' para gravar.");
         } else {
-            alert("Não foi possível ler o arquivo. Certifique-se de que ele possui as colunas de Matrícula e Nome.");
+            alert("Não foi possível ler o arquivo. Certifique-se de que ele possui as colunas de Matrícula e Nome separadas por vírgula, ponto-e-vírgula ou tabulação.");
         }
     };
     reader.readAsText(file, 'UTF-8');
+    // Limpa o input file para permitir reimportar o mesmo arquivo se necessário
+    event.target.value = '';
 }
 
 function salvarAlunosTurma() {
-    const turma = document.getElementById('turma-input').value.trim();
+    const turmaInput = document.getElementById('turma-input');
+    const textoInput = document.getElementById('texto-alunos');
+
+    if (!turmaInput || !textoInput) return;
+
+    const turma = turmaInput.value.trim();
     if (!turma) {
         alert("Preencha o nome da turma primeiro.");
         return;
     }
-    const texto = document.getElementById('texto-alunos').value.trim();
+    
+    const texto = textoInput.value.trim();
     if (!texto) {
         alert("A lista de alunos está vazia.");
         return;
@@ -119,28 +157,39 @@ function salvarAlunosTurma() {
 
     let linhas = texto.split('\n');
     let listaAlunos = [];
+    
     linhas.forEach(linha => {
         let partes = linha.split('-');
         if (partes.length >= 2) {
             let matricula = partes[0].trim();
             let nome = partes.slice(1).join('-').trim();
-            listaAlunos.push({ matricula, nome });
+            if (matricula && nome) {
+                listaAlunos.push({ matricula, nome });
+            }
         }
     });
+
+    if (listaAlunos.length === 0) {
+        alert("Nenhum aluno válido encontrado. O formato deve ser: Matrícula - Nome");
+        return;
+    }
 
     localStorage.setItem(`alunos_${turma}`, JSON.stringify(listaAlunos));
     alert(`${listaAlunos.length} estudantes gravados permanentemente para a turma ${turma}!`);
 }
 
 function carregarDadosTurmaCadastrada() {
-    const turma = document.getElementById('turma-input').value.trim();
+    const turmaInput = document.getElementById('turma-input');
+    if (!turmaInput) return;
+
+    const turma = turmaInput.value.trim();
     if (!turma) return;
     
     let alunos = JSON.parse(localStorage.getItem(`alunos_${turma}`) || '[]');
-    if (alunos.length > 0) {
-        document.getElementById('texto-alunos').value = alunos.map(a => `${a.matricula} - ${a.nome}`).join('\n');
-    } else {
-        document.getElementById('texto-alunos').value = '';
+    const textareaAlunos = document.getElementById('texto-alunos');
+    
+    if (textareaAlunos) {
+        textareaAlunos.value = alunos.length > 0 ? alunos.map(a => `${a.matricula} - ${a.nome}`).join('\n') : '';
     }
 
     let gabaritoStr = localStorage.getItem(`gab_${turma}`);
@@ -148,36 +197,45 @@ function carregarDadosTurmaCadastrada() {
         let gabarito = JSON.parse(gabaritoStr);
         for (let i = 1; i <= 52; i++) {
             if (gabarito[i]) {
-                document.getElementById(`gab_${i}`).value = gabarito[i].resp;
-                document.getElementById(`peso_${i}`).value = gabarito[i].peso;
+                const gabEl = document.getElementById(`gab_${i}`);
+                const pesoEl = document.getElementById(`peso_${i}`);
+                if (gabEl) gabEl.value = gabarito[i].resp;
+                if (pesoEl) pesoEl.value = gabarito[i].peso;
             }
         }
     }
 }
 
 function salvarGabaritoETudo() {
-    const turma = document.getElementById('turma-input').value.trim();
-    if (!turma) {
+    const turmaInput = document.getElementById('turma-input');
+    if (!turmaInput || !turmaInput.value.trim()) {
         alert("Por favor, preencha o nome da turma.");
         return;
     }
+    
     let dadosGabarito = {};
     for (let i = 1; i <= 52; i++) {
+        const gabEl = document.getElementById(`gab_${i}`);
+        const pesoEl = document.getElementById(`peso_${i}`);
         dadosGabarito[i] = {
-            resp: document.getElementById(`gab_${i}`).value,
-            peso: parseFloat(document.getElementById(`peso_${i}`).value) || 0
+            resp: gabEl ? gabEl.value : 'A',
+            peso: pesoEl ? parseFloat(pesoEl.value) || 0 : 0
         };
     }
+    
+    const turma = turmaInput.value.trim();
     localStorage.setItem(`gab_${turma}`, JSON.stringify(dadosGabarito));
     salvarAlunosTurma();
 }
 
 function atualizarSelectTurmasEscanear() {
     const select = document.getElementById('select-turma-escanear');
+    if (!select) return;
+
     select.innerHTML = '<option value="">Selecione a turma...</option>';
     for (let i = 0; i < localStorage.length; i++) {
         let key = localStorage.key(i);
-        if (key.startsWith('gab_')) {
+        if (key && key.startsWith('gab_')) {
             let turma = key.replace('gab_', '');
             select.innerHTML += `<option value="${turma}">${turma}</option>`;
         }
@@ -186,10 +244,12 @@ function atualizarSelectTurmasEscanear() {
 
 function atualizarSelectTurmasRelatorio() {
     const select = document.getElementById('select-turma-rel');
+    if (!select) return;
+
     select.innerHTML = '<option value="">Selecione...</option>';
     for (let i = 0; i < localStorage.length; i++) {
         let key = localStorage.key(i);
-        if (key.startsWith('gab_')) {
+        if (key && key.startsWith('gab_')) {
             let turma = key.replace('gab_', '');
             select.innerHTML += `<option value="${turma}">${turma}</option>`;
         }
@@ -197,10 +257,15 @@ function atualizarSelectTurmasRelatorio() {
 }
 
 function carregarListaAlunosEscanear() {
-    const turma = document.getElementById('select-turma-escanear').value;
+    const selectTurma = document.getElementById('select-turma-escanear');
     const container = document.getElementById('lista-alunos-escolha');
+    const resultadoParcial = document.getElementById('resultado-parcial');
+
+    if (!selectTurma || !container) return;
+
+    const turma = selectTurma.value;
     fecharCamera();
-    document.getElementById('resultado-parcial').style.display = 'none';
+    if (resultadoParcial) resultadoParcial.style.display = 'none';
 
     if (!turma) {
         container.innerHTML = '<div style="padding: 15px; text-align: center; color: #64748b; font-size: 0.85rem;">Selecione uma turma acima.</div>';
@@ -222,7 +287,8 @@ function carregarListaAlunosEscanear() {
         let classeCss = jaAvaliado ? 'aluno-card-item avaliado' : 'aluno-card-item';
         let statusTexto = jaAvaliado ? ' ✔ (Corrigido)' : '';
 
-        html += `<div class="${classeCss}" onclick='selecionarAlunoParaEscanear("${aluno.matricula}", "${aluno.nome}")'>
+        // Usando atributos seguros ou chamadas limpas
+        html += `<div class="${classeCss}" onclick='selecionarAlunoParaEscanear("${aluno.matricula}", ${JSON.stringify(aluno.nome)})'>
                     <div>
                         <strong>${aluno.nome}</strong><br>
                         <span style="font-size:0.75rem; color:#64748b;">Mat: ${aluno.matricula}${statusTexto}</span>
@@ -236,16 +302,30 @@ function carregarListaAlunosEscanear() {
 
 function selecionarAlunoParaEscanear(matricula, nome) {
     alunoAtualSelecionado = { matricula, nome };
-    document.getElementById('aluno-selecionado-titulo').innerText = `Aluno: ${nome}`;
-    document.getElementById('area-camera').style.display = 'block';
-    document.getElementById('resultado-parcial').style.display = 'none';
+    
+    const tituloEl = document.getElementById('aluno-selecionado-titulo');
+    const areaCamera = document.getElementById('area-camera');
+    const resultadoParcial = document.getElementById('resultado-parcial');
+
+    if (tituloEl) tituloEl.innerText = `Aluno: ${nome}`;
+    if (areaCamera) areaCamera.style.display = 'block';
+    if (resultadoParcial) resultadoParcial.style.display = 'none';
+    
     iniciarCamera();
-    window.scrollTo({ top: document.getElementById('area-camera').offsetTop, behavior: 'smooth' });
+    
+    const areaCameraEl = document.getElementById('area-camera');
+    if (areaCameraEl) {
+        window.scrollTo({ top: areaCameraEl.offsetTop, behavior: 'smooth' });
+    }
 }
 
 function capturarEProcessarPorAluno() {
     if (!alunoAtualSelecionado) return;
-    const turma = document.getElementById('select-turma-escanear').value;
+    
+    const selectTurma = document.getElementById('select-turma-escanear');
+    if (!selectTurma) return;
+    
+    const turma = selectTurma.value;
     
     let gabaritoStr = localStorage.getItem(`gab_${turma}`);
     if (!gabaritoStr) {
@@ -256,14 +336,17 @@ function capturarEProcessarPorAluno() {
 
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
-    canvas.width = video.videoWidth || 640;
-    canvas.height = video.videoHeight || 480;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    if (video && canvas) {
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    }
 
     let acertosPort = 0, acertosMat = 0, notaPort = 0, notaMat = 0;
 
     for (let i = 1; i <= 52; i++) {
+        if (!gabarito[i]) continue;
         const opcoes = ['A', 'B', 'C', 'D', 'E'];
         let respMarcada = opcoes[Math.floor(Math.random() * opcoes.length)];
 
@@ -278,13 +361,19 @@ function capturarEProcessarPorAluno() {
         }
     }
 
-    document.getElementById('res-estudante').innerHTML = `<strong>Estudante:</strong> ${alunoAtualSelecionado.nome} (Matrícula: ${alunoAtualSelecionado.matricula})`;
-    document.getElementById('res-port-acertos').innerText = `${acertosPort}/26`;
-    document.getElementById('res-port-nota').innerText = notaPort.toFixed(2);
-    document.getElementById('res-mat-acertos').innerText = `${acertosMat}/26`;
-    document.getElementById('res-mat-nota').innerText = notaMat.toFixed(2);
-    document.getElementById('res-total').innerText = (notaPort + notaMat).toFixed(2);
-    document.getElementById('resultado-parcial').style.display = 'block';
+    // Preenche elementos de resultado parcial de forma segura
+    const setElementText = (id, text) => { const el = document.getElementById(id); if (el) el.innerText = text; };
+    const setElementHTML = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+
+    setElementHTML('res-estudante', `<strong>Estudante:</strong> ${alunoAtualSelecionado.nome} (Matrícula: ${alunoAtualSelecionado.matricula})`);
+    setElementText('res-port-acertos', `${acertosPort}/26`);
+    setElementText('res-port-nota', notaPort.toFixed(2));
+    setElementText('res-mat-acertos', `${acertosMat}/26`);
+    setElementText('res-mat-nota', notaMat.toFixed(2));
+    setElementText('res-total', (notaPort + notaMat).toFixed(2));
+
+    const resultadoParcial = document.getElementById('resultado-parcial');
+    if (resultadoParcial) resultadoParcial.style.display = 'block';
 
     let historicoKey = `hist_${turma}`;
     let historico = JSON.parse(localStorage.getItem(historicoKey) || '[]');
@@ -307,20 +396,24 @@ function capturarEProcessarPorAluno() {
 }
 
 function carregarRelatorio() {
-    const turma = document.getElementById('select-turma-rel').value;
+    const selectTurma = document.getElementById('select-turma-rel');
     const container = document.getElementById('relatorio-conteudo');
     const btnExcel = document.getElementById('btn-exportar');
 
+    if (!selectTurma || !container) return;
+
+    const turma = selectTurma.value;
+
     if (!turma) {
         container.innerHTML = '<p>Selecione uma turma.</p>';
-        btnExcel.style.display = 'none';
+        if (btnExcel) btnExcel.style.display = 'none';
         return;
     }
 
     let historico = JSON.parse(localStorage.getItem(`hist_${turma}`) || '[]');
     if (historico.length === 0) {
         container.innerHTML = `<p>Nenhum estudante corrigido para a turma ${turma} ainda.</p>`;
-        btnExcel.style.display = 'none';
+        if (btnExcel) btnExcel.style.display = 'none';
         return;
     }
 
@@ -342,7 +435,7 @@ function carregarRelatorio() {
                     <td style="padding:6px;">${h.matricula}</td>
                     <td style="padding:6px;">${h.nome}</td>
                     <td style="padding:6px;">${h.portAcertos} ac. (${h.portNota.toFixed(2)})</td>
-                    <td style="padding:6px;">${h.matAcertos} ac. (${h.matNota.toFixed(2)})</td>
+                    <td style="padding:6px;">${h.matAcertos} ac. (${h.matNota.bug ? 0 : h.matNota.toFixed(2)})</td>
                     <td style="padding:6px;"><strong>${h.totalNota.toFixed(2)}</strong></td>
                  </tr>`;
     });
@@ -352,11 +445,14 @@ function carregarRelatorio() {
     html += `<p><strong>Média da Turma - Matemática:</strong> ${(somaNotaMat/historico.length).toFixed(2)}</p>`;
     
     container.innerHTML = html;
-    btnExcel.style.display = 'block';
+    if (btnExcel) btnExcel.style.display = 'block';
 }
 
 function exportarExcel() {
-    const turma = document.getElementById('select-turma-rel').value;
+    const selectTurma = document.getElementById('select-turma-rel');
+    if (!selectTurma) return;
+
+    const turma = selectTurma.value;
     let historico = JSON.parse(localStorage.getItem(`hist_${turma}`) || '[]');
     if (historico.length === 0) return;
 

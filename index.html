@@ -48,12 +48,12 @@
             <!-- CADASTRO / IMPORTAÇÃO DE ESTUDANTES -->
             <div class="aluno-cad-box">
                 <strong>Estudantes da Turma:</strong>
-                <p style="font-size: 0.75rem; color: #64748b; margin: 4px 0 8px 0;">Digite manualmente (um por linha: <em>Matrícula - Nome</em>) ou importe um arquivo do Excel (.csv):</p>
+                <p style="font-size: 0.75rem; color: #64748b; margin: 4px 0 8px 0;">Digite manualmente (um nome por linha) ou importe um arquivo do Excel (.csv):</p>
                 
                 <input type="file" id="input-arquivo-alunos" accept=".csv, .txt" style="display:none;" onchange="importarAlunosDoArquivo(event)">
                 <button type="button" onclick="document.getElementById('input-arquivo-alunos').click()" class="btn-import-csv">📂 Importar Alunos de Arquivo Excel/CSV</button>
 
-                <textarea id="texto-alunos" rows="4" placeholder="Ex:&#10;202601 - Ana Souza&#10;202602 - Bruno Lima" style="margin-top: 10px;"></textarea>
+                <textarea id="texto-alunos" rows="4" placeholder="Ex:&#10;Ana Souza&#10;Bruno Lima" style="margin-top: 10px;"></textarea>
                 <button type="button" onclick="salvarAlunosTurma()" style="margin-top: 0; background: #0284c7; padding: 6px; font-size: 0.85rem;">Salvar Alunos na Turma</button>
             </div>
 
